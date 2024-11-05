@@ -55,7 +55,7 @@ class View():
         self.root.geometry(f"{size[0]}x{size[1]}+{x}+{y}")
 
 
-    def replay(self, saved_game, replay_speed, start_message,final_message=""):
+    def replay(self, saved_game, replay_speed, start_message="",final_message=""):
         self.display_status_message(start_message,"blue")
         self.saved_game = saved_game
         self.replay_speed = replay_speed
@@ -219,14 +219,13 @@ class View():
 
             opp_color = 'black' if the_piece.color == 'white' else 'white'
             if self.game.board.is_king_in_checkmate(opp_color):
-                #[ c.pack_forget() for c in self.status_bar.winfo_children() ]
                 self.turn_text_label['text'] = "CHECKMATE!"
                 self.turn_text_label['foreground'] = 'red'
                 self.turn_text_label.update()
                 self.turn_label['text'] = ""
                 self.turn_label.pack_forget()
                 self.turn_label.update()
-                #self.display_status_message('CHECKMATE!!!!','red')
+                self.game.winner = the_piece.color
                 self.end_game()
                 return
             if self.game.board._is_stalemated(opp_color):
@@ -279,6 +278,20 @@ class View():
         self.canvas.config(width=width, height=height)
         self.draw_board()
         self.draw_pieces()
+        
+        # Resize the window to fit the board
+        padding = 20  # Add some padding around the board
+        window_width = width + padding
+        window_height = height + self.top.winfo_height() + self.player_bar.winfo_height() + padding
+        self.root.geometry(f"{window_width}x{window_height}")
+        
+        # Center the window on the screen
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        self.root.geometry(f"+{x}+{y}")
+        
         if self.do_replay:
             self.game.white_player = self.saved_game['WHITE']
             self.game.black_player = self.saved_game['BLACK']
@@ -401,6 +414,7 @@ class View():
                 cfg.TIME_LIMIT - self.player_time[self.game.player_turn],
                 cfg.TIME_LIMIT - self.player_time[other_player],
                 self.progress_stuff)
+            self.display_status_message((self.progress_stuff.text), 'purple')
             self.root.after(1, self._animate_move, move)
 
     def force_random_move(self):
