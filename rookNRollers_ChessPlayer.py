@@ -14,22 +14,20 @@ class rookNRollers_ChessPlayer(ChessPlayer):
 
         bestScore = -float('inf') if self.current_player == 'X' else float('inf')
         bestMove = None
-        
-        # self.board.get_all_available_legal_moves(self.color))
-        for i in range(3):
-            for j in range(3):
-                if self.board[i][j] == ' ':
-                    self.board[i][j] = self.current_player
-                    score = self.minimax(self.board, 0, self.current_player == 'O')
-                    self.board[i][j] = ' '
-                    if self.current_player == 'X': # Maximizing
-                        if score > bestScore:
-                            bestScore = score
-                            bestMove = (i, j)
-                    else: # Minimizing
-                        if score < bestScore:
-                            bestScore = score
-                            bestMove = (i, j)
+
+        moves = self.board.get_all_available_legal_moves(self.color)
+        for move in moves:
+            self.board[i][j] = self.current_player # making move USE DEEP COPY!
+            score = self.minimax(self.board, 0, self.current_player == 'O')
+            self.board[i][j] = ' '
+            if self.current_player == 'X': # Maximizing
+                if score > bestScore:
+                    bestScore = score
+                    bestMove = (i, j)
+            else: # Minimizing
+                if score < bestScore:
+                    bestScore = score
+                    bestMove = (i, j)
         if bestMove:
             self.make_move(bestMove[0], bestMove[1])
 
