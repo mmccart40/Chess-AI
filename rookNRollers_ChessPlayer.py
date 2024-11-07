@@ -1,5 +1,6 @@
 from chess_player import ChessPlayer
 import random
+from copy import deepcopy
 
 class rookNRollers_ChessPlayer(ChessPlayer):
 
@@ -8,75 +9,81 @@ class rookNRollers_ChessPlayer(ChessPlayer):
 
     def get_move(self, your_remaining_time, opp_remaining_time, prog_stuff):
         # YOUR MIND-BOGGLING CODE GOES HERE
-        # (random choice for now)
 
-        print("Evaluation before move:", self.eval_function()) # print board eval score (for testing purposes)
+        print("Evaluation before move:", self.eval_function(self.board)) # print board eval score (for testing purposes)
 
-        bestScore = -float('inf') if self.current_player == 'X' else float('inf')
+        # white is maximizing, black is minimizing
+        bestScore = -float('inf') if self.color == 'white' else float('inf')
         bestMove = None
 
         moves = self.board.get_all_available_legal_moves(self.color)
         for move in moves:
-            self.board[i][j] = self.current_player # making move USE DEEP COPY!
-            score = self.minimax(self.board, 0, self.current_player == 'O')
-            self.board[i][j] = ' '
-            if self.current_player == 'X': # Maximizing
+
+            temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
+
+            temp_board.make_move(move[0], move[1]) # making move
+            score = self.minimax(temp_board, 0, self.color == 'black') # get score
+            # we don't need to revert move, since we are working on a copy board
+
+            if self.color == 'white': # Maximizing (we are white)
                 if score > bestScore:
                     bestScore = score
-                    bestMove = (i, j)
-            else: # Minimizing
+                    bestMove = move
+            else: # Minimizing (we are black)
                 if score < bestScore:
                     bestScore = score
-                    bestMove = (i, j)
-        if bestMove:
-            self.make_move(bestMove[0], bestMove[1])
+                    bestMove = move
 
+        if bestMove: return bestMove # return the best move we found
+
+
+
+    """
+    Recursive minimax function.
+    """
     def minimax(self, board, depth, isMaximizing):
-        if self.check_winner('X'):
-            return 1
-        elif self.check_winner('O'):
-            return -1
-        elif self.is_board_full():
-            return 0
+
+        # hard-coded depth limit of 2:
+        if depth == 1:
+            return self.eval_function(board)
         
         if isMaximizing:
             bestScore = -float('inf')
-            for i in range(3):
-                for j in range(3):
-                    if board[i][j] == ' ':
-                        board[i][j] = 'X'
-                        score = self.minimax(board, depth + 1, False)
-                        board[i][j] = ' '
-                        bestScore = max(score, bestScore)
+            moves = board.get_all_available_legal_moves('white')
+            for move in moves:
+                temp_board = deepcopy(board) # make a copy of the current board to use for searching
+                temp_board.make_move(move[0], move[1]) # making move
+                score = self.minimax(temp_board, depth + 1, False)
+                bestScore = max(score, bestScore)
             return bestScore
+        
         else:
             bestScore = float('inf')
-            for i in range(3):
-                for j in range(3):
-                    if board[i][j] == ' ':
-                        board[i][j] = 'O'
-                        score = self.minimax(board, depth + 1, True)
-                        board[i][j] = ' '
-                        bestScore = min(score, bestScore)
+            moves = board.get_all_available_legal_moves('black')
+            for move in moves:
+                temp_board = deepcopy(board) # make a copy of the current board to use for searching
+                temp_board.make_move(move[0], move[1]) # making move
+                score = self.minimax(temp_board, depth + 1, True)
+                bestScore = min(score, bestScore)
             return bestScore
 
 
-    def eval_function(self):
+    """
+    Evaluation function. Returns an evaluation score for a given board.
+    """
+    def eval_function(self, board):
         
-		# set opponent's color
-        opponent = 'black' if self.color == 'white' else 'white'
-
-        if self.board.is_king_in_checkmate(self.color):
+        if board.is_king_in_checkmate('white'):
             # if we are in checkmate, return -100
             return -100
-        elif self.board.is_king_in_check(self.color):
+        elif board.is_king_in_check('white'):
             # if we are in check, return -20
             return -20
         
-        if self.board.is_king_in_checkmate(opponent):
-            # if opponent is in checkmate, return 5
-            return 50
-        elif self.board.is_king_in_check(opponent):
+        if board.is_king_in_checkmate('black'):
+            # if opponent is in checkmate, return 100
+            return 100
+        elif board.is_king_in_check('black'):
             # if opponent is in check, return 10
             return 10
         
