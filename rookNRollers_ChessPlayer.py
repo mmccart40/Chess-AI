@@ -5,6 +5,29 @@ from copy import deepcopy
 class rookNRollers_ChessPlayer(ChessPlayer):
 
     def __init__(self, board, color):
+        self.values = {
+            # standard pieces
+            "P": 1, # white pawn
+            "N": 3, # white knight
+            "B": 3, # white bishop
+            "R": 5, # white rook
+            "Q": 10, # white queen
+            "K": 0, # white king
+            "p": -1, # black pawn
+            "n": -3, # black knight
+            "b": -3, # black bishop
+            "r": -5, # black rook
+            "q": -10, # black queen
+            "k": 0, # black king
+
+            # fake pieces:
+            "S" : 6,
+            "F" : 2,
+            "Y" : 4,
+            "s" : -6,
+            "f" : -2,
+            "y" : -4,
+        }
         super().__init__(board, color)
 
     def get_move(self, your_remaining_time, opp_remaining_time, prog_stuff):
@@ -22,7 +45,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
 
             temp_board.make_move(move[0], move[1]) # making move
-            score = self.minimax(temp_board, 0, self.color == 'black') # get score
+            score = self.minimax(temp_board, 0, self.color == 'black', 1) # get score
             # we don't need to revert move, since we are working on a copy board
 
             if self.color == 'white': # Maximizing (we are white)
@@ -41,10 +64,10 @@ class rookNRollers_ChessPlayer(ChessPlayer):
     """
     Recursive minimax function.
     """
-    def minimax(self, board, depth, isMaximizing):
+    def minimax(self, board, depth, isMaximizing, depth_limit):
 
-        # hard-coded depth limit of 2:
-        if depth == 1:
+        # hard-coded depth limit:
+        if depth == depth_limit:
             return self.eval_function(board)
         
         if isMaximizing:
@@ -53,7 +76,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             for move in moves:
                 temp_board = deepcopy(board) # make a copy of the current board to use for searching
                 temp_board.make_move(move[0], move[1]) # making move
-                score = self.minimax(temp_board, depth + 1, False)
+                score = self.minimax(temp_board, depth + 1, False, depth_limit)
                 bestScore = max(score, bestScore)
             return bestScore
         
@@ -63,7 +86,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             for move in moves:
                 temp_board = deepcopy(board) # make a copy of the current board to use for searching
                 temp_board.make_move(move[0], move[1]) # making move
-                score = self.minimax(temp_board, depth + 1, True)
+                score = self.minimax(temp_board, depth + 1, True, depth_limit)
                 bestScore = min(score, bestScore)
             return bestScore
 
@@ -72,19 +95,22 @@ class rookNRollers_ChessPlayer(ChessPlayer):
     Evaluation function. Returns an evaluation score for a given board.
     """
     def eval_function(self, board):
+
+        score = 0
+
+        # --- LOOK FOR CHECK/CHECKMATE --- 3
+        if board.is_king_in_check('white'): # if white is in check
+            if board.is_king_in_checkmate('white'): return -100 # check for checkmate (-100)
+            score -= 1
         
-        if board.is_king_in_checkmate('white'):
-            # if we are in checkmate, return -100
-            return -100
-        elif board.is_king_in_check('white'):
-            # if we are in check, return -20
-            return -20
+        if board.is_king_in_check('black'): # if black is in check
+            if board.is_king_in_checkmate('black'): return 100 # check for checkmate (100)
+            score += 1
+        # ------- #
+
+        # --- PIECE DIFFERENTIAL --- #
+        for loc, piece in board.items():
+            score += self.values[piece.get_notation()]
+        # ------- #
         
-        if board.is_king_in_checkmate('black'):
-            # if opponent is in checkmate, return 100
-            return 100
-        elif board.is_king_in_check('black'):
-            # if opponent is in check, return 10
-            return 10
-        
-        return 0
+        return score
