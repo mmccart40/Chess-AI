@@ -1,6 +1,7 @@
 from chess_player import ChessPlayer
 import random
 from copy import deepcopy
+import math
 
 class rookNRollers_ChessPlayer(ChessPlayer):
 
@@ -42,7 +43,8 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         bestScore = -float('inf') if self.color == 'white' else float('inf')
         bestMove = None
 
-        depth_limit = 64 / len(self.board.items())
+        depth_limit = math.floor(64 / len(self.board.items()))
+        print("depth:", depth_limit)
         moves = self.board.get_all_available_legal_moves(self.color)
         for move in moves:
 
