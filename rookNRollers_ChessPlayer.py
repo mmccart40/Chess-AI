@@ -74,26 +74,26 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             return self.eval_function(board)
         
         if isMaximizing:
-            #bestScore = -float('inf')
+            bestScore = -float('inf')
             moves = board.get_all_available_legal_moves('white')
             for move in moves:
                 temp_board = deepcopy(board) # make a copy of the current board to use for searching
                 temp_board.make_move(move[0], move[1]) # making move
                 score = self.minimax(temp_board, depth + 1, False, depth_limit, alpha, beta)
-                #bestScore = max(score, bestScore)
-                alpha = max(score, alpha)
-            return alpha
+                bestScore = max(score, bestScore)
+                if beta <= alpha: break # alpha beta pruning! :)
+            return bestScore
         
         else:
-            #bestScore = float('inf')
+            bestScore = float('inf')
             moves = board.get_all_available_legal_moves('black')
             for move in moves:
                 temp_board = deepcopy(board) # make a copy of the current board to use for searching
                 temp_board.make_move(move[0], move[1]) # making move
                 score = self.minimax(temp_board, depth + 1, True, depth_limit, alpha, beta)
-                #bestScore = min(score, bestScore)
-                beta = min(score, beta)
-            return beta
+                bestScore = min(score, bestScore)
+                if beta <= alpha: break # alpha beta pruning! :)
+            return bestScore
 
 
     """
