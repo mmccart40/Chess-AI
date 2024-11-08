@@ -48,7 +48,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
 
             temp_board.make_move(move[0], move[1]) # making move
-            score = self.minimax(temp_board, 0, self.color == 'black', 1) # get score
+            score = self.minimax(temp_board, 0, self.color == 'black', 1, -float('inf'), float('inf')) # get score
             # we don't need to revert move, since we are working on a copy board
 
             if self.color == 'white': # Maximizing (we are white)
@@ -67,31 +67,33 @@ class rookNRollers_ChessPlayer(ChessPlayer):
     """
     Recursive minimax function.
     """
-    def minimax(self, board, depth, isMaximizing, depth_limit):
+    def minimax(self, board, depth, isMaximizing, depth_limit, alpha, beta):
 
         # hard-coded depth limit:
         if depth == depth_limit:
             return self.eval_function(board)
         
         if isMaximizing:
-            bestScore = -float('inf')
+            #bestScore = -float('inf')
             moves = board.get_all_available_legal_moves('white')
             for move in moves:
                 temp_board = deepcopy(board) # make a copy of the current board to use for searching
                 temp_board.make_move(move[0], move[1]) # making move
-                score = self.minimax(temp_board, depth + 1, False, depth_limit)
-                bestScore = max(score, bestScore)
-            return bestScore
+                score = self.minimax(temp_board, depth + 1, False, depth_limit, alpha, beta)
+                #bestScore = max(score, bestScore)
+                alpha = max(score, alpha)
+            return alpha
         
         else:
-            bestScore = float('inf')
+            #bestScore = float('inf')
             moves = board.get_all_available_legal_moves('black')
             for move in moves:
                 temp_board = deepcopy(board) # make a copy of the current board to use for searching
                 temp_board.make_move(move[0], move[1]) # making move
-                score = self.minimax(temp_board, depth + 1, True, depth_limit)
-                bestScore = min(score, bestScore)
-            return bestScore
+                score = self.minimax(temp_board, depth + 1, True, depth_limit, alpha, beta)
+                #bestScore = min(score, bestScore)
+                beta = min(score, beta)
+            return beta
 
 
     """
