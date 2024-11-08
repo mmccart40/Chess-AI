@@ -43,9 +43,10 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         bestScore = -float('inf') if self.color == 'white' else float('inf')
         bestMove = None
 
-        depth_limit = math.floor(64 / len(self.board.items()))
-        print("depth:", depth_limit)
         moves = self.board.get_all_available_legal_moves(self.color)
+        depth_limit = math.floor(20 / len(moves))
+        print("depth:", depth_limit)
+
         for move in moves:
 
             temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
