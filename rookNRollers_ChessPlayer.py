@@ -71,7 +71,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
     def minimax(self, board, depth, isMaximizing, depth_limit, alpha, beta):
 
         # hard-coded depth limit:
-        if depth > depth_limit:
+        if depth >= depth_limit:
             return self.eval_function(board)
         
         if isMaximizing:
