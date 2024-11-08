@@ -120,12 +120,13 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             if (piece.get_notation() == 'p' or piece.get_notation() == 'P'):
                 if loc[0] > 'c' and loc[0] < 'f':
                     if int(loc[1]) > 3 and int(loc[1]) < 6:
-                        score += self.values[piece.get_notation()] * 2
+                        score += self.values[piece.get_notation()] * 1.25
                 elif loc[0] > 'b' and loc[0] < 'g':
                     if int(loc[1]) > 2 and int(loc[1]) < 7:
-                        score += self.values[piece.get_notation()] * 1.5
+                        score += self.values[piece.get_notation()] * 1.1
             # everything else
-            score += self.values[piece.get_notation()]
+            else:
+                score += self.values[piece.get_notation()]
         # ------- #
         
         return score
