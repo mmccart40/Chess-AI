@@ -42,13 +42,14 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         bestScore = -float('inf') if self.color == 'white' else float('inf')
         bestMove = None
 
+        depth_limit = 64 / len(self.board.items())
         moves = self.board.get_all_available_legal_moves(self.color)
         for move in moves:
 
             temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
 
             temp_board.make_move(move[0], move[1]) # making move
-            score = self.minimax(temp_board, 0, self.color == 'black', 1, -float('inf'), float('inf')) # get score
+            score = self.minimax(temp_board, 1, self.color == 'black', depth_limit, -float('inf'), float('inf')) # get score
             # we don't need to revert move, since we are working on a copy board
 
             if self.color == 'white': # Maximizing (we are white)
@@ -70,7 +71,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
     def minimax(self, board, depth, isMaximizing, depth_limit, alpha, beta):
 
         # hard-coded depth limit:
-        if depth == depth_limit:
+        if depth > depth_limit:
             return self.eval_function(board)
         
         if isMaximizing:
