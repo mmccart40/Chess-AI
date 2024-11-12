@@ -56,9 +56,9 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         total_moves = len(moves) + len(self.board.get_all_available_legal_moves(opp))
         print('Total moves:', total_moves)
         if total_moves < 11:
-            depth_limit = 6
-        elif total_moves < 21:
             depth_limit = 4
+        elif total_moves < 21:
+            depth_limit = 3
         else:
             depth_limit = 2
         
@@ -85,8 +85,15 @@ class rookNRollers_ChessPlayer(ChessPlayer):
                 if score > bestScore:
                     bestScore = score
                     bestMove = move
+                elif score == bestScore and random.random() < .2:
+                    bestScore = score
+                    bestMove = move
+
             else: # Minimizing (we are black)
                 if score < bestScore:
+                    bestScore = score
+                    bestMove = move
+                elif score == bestScore and random.random() < .2:
                     bestScore = score
                     bestMove = move
 
@@ -143,11 +150,11 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         if self.turn > 6:
             if board.is_king_in_check('white'): # if white is in check
                 if board.is_king_in_checkmate('white'): return -1000 # check for checkmate (-100)
-                score -= 0.9
+                score -= 0.005
             
             if board.is_king_in_check('black'): # if black is in check
                 if board.is_king_in_checkmate('black'): return 1000 # check for checkmate (100)
-                score += 0.9
+                score += 0.005
         # ------- #
 
 
@@ -155,50 +162,67 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         for loc, piece in board.items():
             piece_char = piece.get_notation()
             
-            # center pawns are good!
-            if (piece_char == 'p' or piece_char == 'P'):
+            # center pawn bonus!
+            if (piece_char.lower() == 'p'):
+                sign = 1 if piece_char == 'P' else -1 # white = positive, black = negative
                 if loc[0] > 'c' and loc[0] < 'f':
                     if int(loc[1]) > 3 and int(loc[1]) < 6:
-                        score += self.values[piece_char] * 1.01
+                        score += sign * 0.015
                 elif loc[0] > 'b' and loc[0] < 'g':
                     if int(loc[1]) > 2 and int(loc[1]) < 7:
-                        score += self.values[piece_char] * 1.005
-                else:
-                    score += self.values[piece_char]
-            # king moves are not ideal
-            elif piece_char.lower() == 'k':
-                score += self.values[piece_char] * 0.99
-            else:
-                score += self.values[piece_char]
+                        score += sign * 0.01
+            # center knight bonus!
+            elif (piece_char.lower() == 'n'):
+                sign = 1 if piece_char == 'N' else -1 # white = positive, black = negative
+                if loc[0] > 'b' and loc[0] < 'g':
+                    if int(loc[1]) > 2 and int(loc[1]) < 7:
+                        score += sign * 0.001
+            # active rook bonus!
+            elif (piece_char.lower() == 'r'):
+                sign = 1 if piece_char == 'R' else -1 # white = positive, black = negative
+                if loc[0] > 'c' and loc[0] < 'f':
+                    score += sign * .2
+            
+            # standard piece value
+            score += self.values[piece_char]
         # ------- #
 
-        
-        # --- ATTACKED VS ATTACKING --- #
-        '''
+        white_moves = board._get_all_available_moves('white')
+        black_moves = board._get_all_available_moves('black')
+
+        # --- ATTACKING --- #
         for item in board.items():
             loc, piece = item
             piece_char = piece.get_notation()
-            if (piece_char.lower() == 'p'): # skip pawns
-                continue
-            if (piece_char.lower() == 'n'): # skip knights
-                continue
-            if (piece_char.lower() == 'b'): # skip bishops
-                continue
             if (piece_char.lower() == 'k'): # skip kings (checks are handled earlier)
                 continue
-            if self.is_piece_attacked(item):
-                score += self.values[piece_char] * -0.1 # attacking is slightly good, being attacked is slightly bad
-        '''
+            if self.is_piece_attacked(item, white_moves, black_moves):
+                score += self.values[piece_char] * -0.005 # attacking is slightly good, being attacked is slightly bad
+        # ------- #
+
+        # --- DEFENDING --- #
+        for item in board.items():
+            loc, piece = item
+            piece_char = piece.get_notation()
+            if (piece_char.lower() == 'k'): # skip kings
+                continue
+            if self.is_piece_defended(item, white_moves, black_moves):
+                score += self.values[piece_char] * 0.005 # defeding pieces is good
         # ------- #
         
         return score
     
-    def is_piece_attacked(self, item):
-        '''Return True if the player whose color is passed is currently attacked'''
+    def is_piece_attacked(self, item, white_moves, black_moves):
+        '''Return True if the piece is currently attacked'''
         color = 'white' if item[1].get_notation().isupper() else 'black'
         loc = item[0]
-        return loc in [ loc for _,loc in self.board._get_all_available_moves(
-            'white' if color=='black' else 'black')]
+        return loc in [ loc for _,loc in (black_moves if color=='white' else white_moves)]
+    
+    def is_piece_defended(self, item, white_moves, black_moves):
+        '''Return True if the piece is currently defended'''
+        color = 'white' if item[1].get_notation().isupper() else 'black'
+        loc = item[0]
+        return loc in [ loc for _,loc in (white_moves if color=='white' else black_moves)]
     
     def get_piece_at_loc(self, board, location):
         for loc, piece in board.items():
