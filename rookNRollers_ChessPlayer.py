@@ -172,11 +172,19 @@ class rookNRollers_ChessPlayer(ChessPlayer):
                     if int(loc[1]) > 2 and int(loc[1]) < 7:
                         score += sign * 0.01
             # center knight bonus!
-            elif (piece_char.lower() == 'n'):
-                sign = 1 if piece_char == 'N' else -1 # white = positive, black = negative
-                if loc[0] > 'b' and loc[0] < 'g':
-                    if int(loc[1]) > 2 and int(loc[1]) < 7:
-                        score += sign * 0.001
+            #elif (piece_char.lower() == 'n'):
+            #    sign = 1 if piece_char == 'N' else -1 # white = positive, black = negative
+            #    if loc[0] > 'b' and loc[0] < 'g':
+            #        if int(loc[1]) > 2 and int(loc[1]) < 7:
+            #            score += sign * 0.001
+            # sedentary knight/bishop penalty
+            if (piece_char.lower() == 'n' or piece_char.lower() == 'b'):
+                if (piece_char == 'N' or piece_char == 'B'): # white
+                    if (int(loc[1]) == 1):
+                        score -= .01
+                else: # black
+                    if (int(loc[1]) == 8):
+                        score += .01
             # active rook bonus!
             elif (piece_char.lower() == 'r'):
                 sign = 1 if piece_char == 'R' else -1 # white = positive, black = negative
@@ -212,6 +220,8 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         
         return score
     
+    # helper functions
+
     def is_piece_attacked(self, item, white_moves, black_moves):
         '''Return True if the piece is currently attacked'''
         color = 'white' if item[1].get_notation().isupper() else 'black'
