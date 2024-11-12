@@ -10,6 +10,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
     def __init__(self, board, color):
         self.turn = 0
         self.last_score = 0
+        self.looking_to_castle = True
         self.values = {
             # standard pieces
             "P": 1, # white pawn
@@ -51,35 +52,23 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         bestMove = None
 
         moves = self.board.get_all_available_legal_moves(self.color)
-        
+        #moves, num_captures = self.sort_moves(moves)
+        moves = self.sort_moves_2(moves, self.color)
+
         opp = 'black' if self.color == 'white' else 'white'
         total_moves = len(moves) + len(self.board.get_all_available_legal_moves(opp))
         print('Total moves:', total_moves)
-        if total_moves < 11:
-            depth_limit = 4
-        elif total_moves < 21:
-            depth_limit = 3
-        else:
-            depth_limit = 2
         
-        '''
-        pc_count = len(self.board.items())
-        print('Piece count:', pc_count)
-        
-        depth_limit = 2
-        if pc_count < 12:
-            depth_limit = 4
-        if pc_count < 9:
-            depth_limit = 6
-        '''
+        depth_limit = 2 if total_moves < 35 else 1
         print("depth:", depth_limit)
+        #print('Possible captures:', num_captures)
 
 
         for move in moves:
             temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
 
             temp_board.make_move(move[0], move[1]) # making move
-            score = self.minimax(temp_board, 1, self.color == 'black', depth_limit, -float('inf'), float('inf')) # get score
+            score = self.minimax(temp_board, 0, self.color == 'black', depth_limit, -float('inf'), float('inf')) # get score
 
             if self.color == 'white': # Maximizing (we are white)
                 if score > bestScore:
@@ -139,9 +128,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             return bestScore
 
 
-    """
-    Evaluation function. Returns an evaluation score for a given board.
-    """
+    """ Evaluation function. Returns an evaluation score for a given board. """
     def eval_function(self, board):
 
         score = 0
@@ -171,25 +158,20 @@ class rookNRollers_ChessPlayer(ChessPlayer):
                 elif loc[0] > 'b' and loc[0] < 'g':
                     if int(loc[1]) > 2 and int(loc[1]) < 7:
                         score += sign * 0.01
-            # center knight bonus!
-            #elif (piece_char.lower() == 'n'):
-            #    sign = 1 if piece_char == 'N' else -1 # white = positive, black = negative
-            #    if loc[0] > 'b' and loc[0] < 'g':
-            #        if int(loc[1]) > 2 and int(loc[1]) < 7:
-            #            score += sign * 0.001
             # sedentary knight/bishop penalty
             if (piece_char.lower() == 'n' or piece_char.lower() == 'b'):
                 if (piece_char == 'N' or piece_char == 'B'): # white
                     if (int(loc[1]) == 1):
-                        score -= .01
+                        score -= .012
                 else: # black
                     if (int(loc[1]) == 8):
-                        score += .01
+                        score += .012
             # active rook bonus!
-            elif (piece_char.lower() == 'r'):
+            elif (piece_char.lower() == 'r' and self.looking_to_castle):
                 sign = 1 if piece_char == 'R' else -1 # white = positive, black = negative
-                if loc[0] > 'c' and loc[0] < 'f':
+                if loc[0] > 'c' and loc[0] < 'g':
                     score += sign * .2
+                    self.looking_to_castle = False
             
             # standard piece value
             score += self.values[piece_char]
@@ -220,22 +202,66 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         
         return score
     
-    # helper functions
 
+
+    # --- HELPER FUNCTIONS --- #
+
+    ''' Sorts moves by prioritizing captures '''
+    def sort_moves(self, moves):
+        sorted_moves = []
+        num_captures = 0
+        for move in moves:
+            if (self.is_piece_at_loc(self.board, move[1])): # piece
+                sorted_moves.insert(0, move)
+                num_captures += 1
+            else: # no piece
+                sorted_moves.append(move)
+        return sorted_moves, num_captures
+
+    ''' Sorts move based on evaluation function '''
+    def sort_moves_2(self, moves, color):
+        sorted_moves = []
+        dict = {}
+        for move in moves:
+            board = deepcopy(self.board)
+            board.make_move(move[0], move[1])
+            dict[move] = self.eval_function(board) # score : move
+        if color == 'white':
+            while len(dict) > 0:
+                maxi = -99999
+                for move in dict.keys():
+                    if dict[move] > maxi:
+                        maxi = dict[move]
+                        best_move = move
+                sorted_moves.append(best_move)
+                dict.pop(best_move)
+        else:
+            while len(dict) > 0:
+                mini = 99999
+                for move in dict.keys():
+                    if dict[move] < mini:
+                        mini = dict[move]
+                        best_move = move
+                sorted_moves.append(best_move)
+                dict.pop(best_move)
+        return sorted_moves
+    
+
+    ''' Return True if the piece is currently attacked '''
     def is_piece_attacked(self, item, white_moves, black_moves):
-        '''Return True if the piece is currently attacked'''
         color = 'white' if item[1].get_notation().isupper() else 'black'
         loc = item[0]
         return loc in [ loc for _,loc in (black_moves if color=='white' else white_moves)]
     
+    ''' Return True if the piece is currently defended '''
     def is_piece_defended(self, item, white_moves, black_moves):
-        '''Return True if the piece is currently defended'''
         color = 'white' if item[1].get_notation().isupper() else 'black'
         loc = item[0]
         return loc in [ loc for _,loc in (white_moves if color=='white' else black_moves)]
     
-    def get_piece_at_loc(self, board, location):
+    ''' Return True if there is a piece at the given location '''
+    def is_piece_at_loc(self, board, location):
         for loc, piece in board.items():
             if location == loc:
-                return piece
+                return True
         return False

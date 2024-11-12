@@ -28,7 +28,7 @@ class Random3_ChessPlayer(ChessPlayer):
                 return move
 
         for move in self.board.get_all_available_legal_moves(self.color):
-            print(self.board.get(move[1]))
+            #print(self.board.get(move[1]))
             if(self.board.get(move[1])):
                 return move
         return random.choice(self.board.get_all_available_legal_moves(self.color))
