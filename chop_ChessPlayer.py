@@ -5,7 +5,7 @@ import math
 from chess_piece import *
 import time
 
-class rookNRollers_ChessPlayer(ChessPlayer):
+class chop_ChessPlayer(ChessPlayer):
 
     def __init__(self, board, color):
         self.turn = 0
@@ -55,12 +55,14 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         moves = self.board.get_all_available_legal_moves(self.color)
         #moves, num_captures = self.sort_moves(moves)
         moves = self.sort_moves_2(moves, self.color, self.board)
+        if len(moves) >= 10:
+            moves = moves[0:5]
 
         opp = 'black' if self.color == 'white' else 'white'
         total_moves = len(moves) + len(self.board.get_all_available_legal_moves(opp))
         print('Total moves:', total_moves)
         
-        depth_limit = 2 if total_moves < 35 else 1
+        depth_limit = 2 #if total_moves < 35 else 3
         print("depth:", depth_limit)
         #print('Possible captures:', num_captures)
 
@@ -108,7 +110,10 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         if isMaximizing:
             bestScore = -float('inf')
             moves = board.get_all_available_legal_moves('white')
-            #moves = self.sort_moves_2(moves, 'white', board)
+            moves = self.sort_moves_2(moves, 'white', board)
+            if len(moves) >= 10:
+                moves = moves[0:5]
+
             for move in moves:
 
                 # make move, avoiding deepcopy when possible
@@ -133,7 +138,10 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         else:
             bestScore = float('inf')
             moves = board.get_all_available_legal_moves('black')
-            #moves = self.sort_moves_2(moves, 'black', board)
+            moves = self.sort_moves_2(moves, 'black', board)
+            if len(moves) >= 10:
+                moves = moves[0:5]
+
             for move in moves:
 
                 # make move, avoiding deepcopy when possible
