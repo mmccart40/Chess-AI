@@ -55,6 +55,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         moves = self.board.get_all_available_legal_moves(self.color)
         #moves, num_captures = self.sort_moves(moves)
         moves = self.sort_moves_2(moves, self.color, self.board)
+        moves = moves[0:len(moves)//2]
 
         opp = 'black' if self.color == 'white' else 'white'
         total_moves = len(moves) + len(self.board.get_all_available_legal_moves(opp))
