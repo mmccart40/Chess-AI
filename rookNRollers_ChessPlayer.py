@@ -19,13 +19,13 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             "B": 3, # white bishop
             "R": 5, # white rook
             "Q": 10, # white queen
-            "K": 1000, # white king
+            "K": 0, # white king
             "p": -1, # black pawn
             "n": -3, # black knight
             "b": -3, # black bishop
             "r": -5, # black rook
             "q": -10, # black queen
-            "k": -1000, # black king
+            "k": 0, # black king
 
             # fake pieces:
             "S" : 6,
@@ -178,24 +178,21 @@ class rookNRollers_ChessPlayer(ChessPlayer):
 
         score = 0
 
-        # --- LOOK FOR CHECK/CHECKMATE --- 3        
-        if self.turn > 6:
-            if board.is_king_in_check('white'): # if white is in check
-                if board.is_king_in_checkmate('white'): return -1000 # check for checkmate (-100)
-                score -= 0.005
+        # --- LOOK FOR CHECK/CHECKMATE --- #        
+        if board.is_king_in_check('white'): # if white is in check
+            if board.is_king_in_checkmate('white'): return -1000 # check for checkmate (-100)
+            score -= 0.02
             
-            if board.is_king_in_check('black'): # if black is in check
-                if board.is_king_in_checkmate('black'): return 1000 # check for checkmate (100)
-                score += 0.005
+        if board.is_king_in_check('black'): # if black is in check
+            if board.is_king_in_checkmate('black'): return 1000 # check for checkmate (100)
+            score += 0.02
         # ------- #
 
         
-        ''' this is pretty slow
         # --- STALEMATE --- #
-        if (board._is_stalemated('white') or board._is_stalemated('black')):
-            return 0
+        #if (board._is_stalemated('white') or board._is_stalemated('black')):
+        #    return 0
         # ------- #
-        '''
 
         
         # --- PIECE DIFFERENTIAL --- #
@@ -238,8 +235,6 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         for item in board.items():
             loc, piece = item
             piece_char = piece.get_notation()
-            if (piece_char.lower() == 'k'): # skip kings (checks are handled earlier)
-                continue
             if self.is_piece_attacked(item, white_moves, black_moves):
                 score += self.values[piece_char] * -0.005 # attacking is slightly good, being attacked is slightly bad
         # ------- #
@@ -249,8 +244,6 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         for item in board.items():
             loc, piece = item
             piece_char = piece.get_notation()
-            if (piece_char.lower() == 'k'): # skip kings
-                continue
             if self.is_piece_defended(item, white_moves, black_moves):
                 score += self.values[piece_char] * 0.005 # defeding pieces is good
         # ------- #
