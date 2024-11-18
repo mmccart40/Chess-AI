@@ -43,7 +43,6 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         start = time.time()
 
         self.turn += 1
-        print('------------')
         print(self.color, '- turn', self.turn)
         print("Remaining time:", your_remaining_time)
         print("Evaluation before move:", self.eval_function(self.board)) # print board eval score (for testing purposes)
@@ -60,11 +59,14 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         total_moves = len(moves) + len(self.board.get_all_available_legal_moves(opp))
         print('Total moves:', total_moves)
         
-        depth_limit = 2 if total_moves < 35 else 1
+        depth_limit = 2 if total_moves < 30 else 1
         print("depth:", depth_limit)
         #print('Possible captures:', num_captures)
 
+        count = 0
         for move in moves:
+            count += 1
+            print("branch:", count)
             temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
 
             temp_board.make_move(move[0], move[1]) # making move
@@ -74,7 +76,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
                 if score > bestScore:
                     bestScore = score
                     bestMove = move
-                elif score == bestScore and random.random() < .2:
+                elif score == bestScore and random.random() < .5:
                     bestScore = score
                     bestMove = move
 
@@ -82,7 +84,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
                 if score < bestScore:
                     bestScore = score
                     bestMove = move
-                elif score == bestScore and random.random() < .2:
+                elif score == bestScore and random.random() < .5:
                     bestScore = score
                     bestMove = move
 
@@ -91,6 +93,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         end = time.time()
         print('Thinking time:', end-start)
         print('Prune count:', self.prune_count)
+        print('\n------------\n')
         self.prune_count = 0
         if bestMove: return bestMove # return the best move we found
 
@@ -110,9 +113,12 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             moves = board.get_all_available_legal_moves('white')
             #moves = self.sort_moves_2(moves, 'white', board)
             for move in moves:
-
+                
+                '''
                 # make move, avoiding deepcopy when possible
-                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('white'))):
+                #if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('white'))):
+                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('white')
+                         or move[1][1] == '8' )):
                     # non-captures or non-king moves
                     board[move[0]]._move_yourself(move[0], move[1], board) # make move
                     score = self.minimax(board, depth + 1, False, depth_limit, alpha, beta)
@@ -122,8 +128,12 @@ class rookNRollers_ChessPlayer(ChessPlayer):
                     temp_board = deepcopy(board) # make a copy of the current board to use for searching
                     temp_board.make_move(move[0], move[1]) # making move
                     score = self.minimax(temp_board, depth + 1, False, depth_limit, alpha, beta)
+                '''
+                temp_board = deepcopy(board) # make a copy of the current board to use for searching
+                temp_board.make_move(move[0], move[1]) # making move
+                score = self.minimax(temp_board, depth + 1, False, depth_limit, alpha, beta)
+                
                 bestScore = max(score, bestScore)
-
                 alpha = max(bestScore, alpha)
                 if beta <= alpha:
                     self.prune_count += 1
@@ -136,8 +146,11 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             #moves = self.sort_moves_2(moves, 'black', board)
             for move in moves:
 
+                '''
                 # make move, avoiding deepcopy when possible
-                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('black')) ):
+                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('black')
+                         or move[1][1] == '1' )):
+                #if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('black')) ):
                     # non-captures or non-king moves
                     board[move[0]]._move_yourself(move[0], move[1], board) # make move
                     score = self.minimax(board, depth + 1, True, depth_limit, alpha, beta)
@@ -147,6 +160,10 @@ class rookNRollers_ChessPlayer(ChessPlayer):
                     temp_board = deepcopy(board) # make a copy of the current board to use for searching
                     temp_board.make_move(move[0], move[1]) # making move
                     score = self.minimax(temp_board, depth + 1, True, depth_limit, alpha, beta)
+                '''
+                temp_board = deepcopy(board) # make a copy of the current board to use for searching
+                temp_board.make_move(move[0], move[1]) # making move
+                score = self.minimax(temp_board, depth + 1, True, depth_limit, alpha, beta)
                 
                 bestScore = min(score, bestScore)
                 beta = min(bestScore, beta)

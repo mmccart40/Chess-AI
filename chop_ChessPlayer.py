@@ -43,7 +43,6 @@ class chop_ChessPlayer(ChessPlayer):
         start = time.time()
 
         self.turn += 1
-        print('------------')
         print(self.color, '- turn', self.turn)
         print("Remaining time:", your_remaining_time)
         print("Evaluation before move:", self.eval_function(self.board)) # print board eval score (for testing purposes)
@@ -55,8 +54,7 @@ class chop_ChessPlayer(ChessPlayer):
         moves = self.board.get_all_available_legal_moves(self.color)
         #moves, num_captures = self.sort_moves(moves)
         moves = self.sort_moves_2(moves, self.color, self.board)
-        if len(moves) >= 10:
-            moves = moves[0:5]
+        moves = moves[0:5]
 
         opp = 'black' if self.color == 'white' else 'white'
         total_moves = len(moves) + len(self.board.get_all_available_legal_moves(opp))
@@ -66,7 +64,11 @@ class chop_ChessPlayer(ChessPlayer):
         print("depth:", depth_limit)
         #print('Possible captures:', num_captures)
 
+        count = 0
         for move in moves:
+            count += 1
+            print("branch:", count)
+            
             temp_board = deepcopy(self.board) # make a copy of the current board to use for searching
 
             temp_board.make_move(move[0], move[1]) # making move
@@ -93,6 +95,7 @@ class chop_ChessPlayer(ChessPlayer):
         end = time.time()
         print('Thinking time:', end-start)
         print('Prune count:', self.prune_count)
+        print('\n------------\n')
         self.prune_count = 0
         if bestMove: return bestMove # return the best move we found
 
@@ -116,8 +119,11 @@ class chop_ChessPlayer(ChessPlayer):
 
             for move in moves:
 
+                '''
                 # make move, avoiding deepcopy when possible
-                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('white'))):
+                #if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('white'))):
+                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('white')
+                         or move[1][1] == '8' )):
                     # non-captures or non-king moves
                     board[move[0]]._move_yourself(move[0], move[1], board) # make move
                     score = self.minimax(board, depth + 1, False, depth_limit, alpha, beta)
@@ -127,8 +133,12 @@ class chop_ChessPlayer(ChessPlayer):
                     temp_board = deepcopy(board) # make a copy of the current board to use for searching
                     temp_board.make_move(move[0], move[1]) # making move
                     score = self.minimax(temp_board, depth + 1, False, depth_limit, alpha, beta)
-                bestScore = max(score, bestScore)
+                '''
+                temp_board = deepcopy(board) # make a copy of the current board to use for searching
+                temp_board.make_move(move[0], move[1]) # making move
+                score = self.minimax(temp_board, depth + 1, False, depth_limit, alpha, beta)
 
+                bestScore = max(score, bestScore)
                 alpha = max(bestScore, alpha)
                 if beta <= alpha:
                     self.prune_count += 1
@@ -144,8 +154,11 @@ class chop_ChessPlayer(ChessPlayer):
 
             for move in moves:
 
+                '''
                 # make move, avoiding deepcopy when possible
-                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('black')) ):
+                if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('black')
+                         or move[1][1] == '1' )):
+                #if (not (self.is_piece_at_loc(board, move[1]) or move[0] == board.get_king_location('black')) ):
                     # non-captures or non-king moves
                     board[move[0]]._move_yourself(move[0], move[1], board) # make move
                     score = self.minimax(board, depth + 1, True, depth_limit, alpha, beta)
@@ -155,6 +168,10 @@ class chop_ChessPlayer(ChessPlayer):
                     temp_board = deepcopy(board) # make a copy of the current board to use for searching
                     temp_board.make_move(move[0], move[1]) # making move
                     score = self.minimax(temp_board, depth + 1, True, depth_limit, alpha, beta)
+                '''
+                temp_board = deepcopy(board) # make a copy of the current board to use for searching
+                temp_board.make_move(move[0], move[1]) # making move
+                score = self.minimax(temp_board, depth + 1, True, depth_limit, alpha, beta)
                 
                 bestScore = min(score, bestScore)
                 beta = min(bestScore, beta)
@@ -221,7 +238,6 @@ class chop_ChessPlayer(ChessPlayer):
             score += self.values[piece_char]
         # ------- #
         
-        #'''
         white_moves = board._get_all_available_moves('white')
         black_moves = board._get_all_available_moves('black')
 
@@ -245,7 +261,6 @@ class chop_ChessPlayer(ChessPlayer):
             if self.is_piece_defended(item, white_moves, black_moves):
                 score += self.values[piece_char] * 0.005 # defeding pieces is good
         # ------- #
-        #'''
         
         return score
     
