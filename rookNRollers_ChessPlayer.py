@@ -12,6 +12,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         self.last_score = 0
         self.looking_to_castle = True
         self.prune_count = 0
+        self.force_depth = 0
         self.values = {
             # standard pieces
             "P": 1, # white pawn
@@ -59,7 +60,8 @@ class rookNRollers_ChessPlayer(ChessPlayer):
         total_moves = len(moves) + len(self.board.get_all_available_legal_moves(opp))
         print('Total moves:', total_moves)
         
-        depth_limit = 2 if total_moves < 30 else 1
+        #depth_limit = 2 if total_moves < 30 else 1
+        depth_limit = self.force_depth if self.force_depth else 1
         print("depth:", depth_limit)
         #print('Possible captures:', num_captures)
 
@@ -92,9 +94,22 @@ class rookNRollers_ChessPlayer(ChessPlayer):
 
         end = time.time()
         print('Thinking time:', end-start)
-        print('Prune count:', self.prune_count)
+
+        # if we found a move super quickly (and we didn't already find mate), go again at a deeper depth
+        if (end-start < .75 and abs(bestScore) < 1000):
+            print('\nLooking deeper!\n')
+            self.force_depth = 3
+            bestMove = self.get_move(0, 0, 0)
+            self.force_depth = 0
+            return bestMove
+        elif (end-start < 2.5 and abs(bestScore) < 1000):
+            print('\nLooking deeper!\n')
+            self.force_depth = 2
+            bestMove = self.get_move(0, 0, 0)
+            self.force_depth = 0
+            return bestMove
+        
         print('\n------------\n')
-        self.prune_count = 0
         if bestMove: return bestMove # return the best move we found
 
 
@@ -236,7 +251,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             loc, piece = item
             piece_char = piece.get_notation()
             if self.is_piece_attacked(item, white_moves, black_moves):
-                score += self.values[piece_char] * -0.005 # attacking is slightly good, being attacked is slightly bad
+                score += self.values[piece_char] * -0.0005 # attacking is slightly good, being attacked is slightly bad
         # ------- #
 
 
@@ -245,7 +260,7 @@ class rookNRollers_ChessPlayer(ChessPlayer):
             loc, piece = item
             piece_char = piece.get_notation()
             if self.is_piece_defended(item, white_moves, black_moves):
-                score += self.values[piece_char] * 0.005 # defeding pieces is good
+                score += self.values[piece_char] * 0.0005 # defeding pieces is good
         # ------- #
         #'''
         
